@@ -74,16 +74,7 @@ cd Binance_trading_bot
 python main.py
 ```
 
-## Environment Variables
-```
-BINANCE_API_KEY=
-BINANCE_SECRET_KEY=
-BINANCE_TESTNET_API_KEY=
-BINANCE_TESTNET_SECRET_KEY=
-TRADING_MODE=testnet
-CRYPTOPANIC_API_KEY=
-ANTHROPIC_API_KEY=
-```
+
 
 ## Project Structure
 ```
