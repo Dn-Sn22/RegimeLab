@@ -19,6 +19,11 @@ else:
 SYMBOL           = "BTCUSDT"
 INTERVAL         = "1m"
 MAX_POSITION_PCT = 0.05
-DAILY_LOSS_LIMIT = 0.15
+DAILY_LOSS_LIMIT = 0.10
 
 print(f"[config] Mode: {MODE} | Symbol: {SYMBOL} | Base: {BASE_URL}")
+
+# Kelly параметры
+WIN_RATE = 0.55
+AVG_WIN  = 0.06
+AVG_LOSS = 0.03
