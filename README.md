@@ -6,8 +6,9 @@ Currently running in paper trading mode on Binance Testnet.
 
 ## Idea
 
-The bot monitors the market 24/7. The goal is to predict when BTC starts
-dropping, move to USDT, catch the correction and come back in profit.
+A swing trading bot that monitors BTC/USDT 24/7.
+The goal is to predict market corrections — sell before the drop,
+buy back at the bottom, and capture the rebound in profit.
 
 ## How It Works
 
