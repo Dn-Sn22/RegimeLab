@@ -83,7 +83,6 @@ cp .env.example .env
 ## Usage
 ```bash
 conda activate botenv
-cd Binance_trading_bot
 python main.py
 ```
 
