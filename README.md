@@ -69,7 +69,6 @@ main.py          orchestrator for all modules
 Requires [Anaconda](https://www.anaconda.com/download) — used for environment management.
 ```bash
 git clone https://github.com/Dn-Sn22/Binance_trading_bot.git
-git clone https://github.com/Dn-Sn22/Binance_trading_bot.git
 cd Binance_trading_bot
 
 conda create -n botenv python=3.11 -y
