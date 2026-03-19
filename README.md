@@ -1,7 +1,7 @@
 # BTC Trading Bot
 
 AI-powered trading bot for BTC/USDT on Binance.
-Built from scratch as a long-term project to learn algorithmic trading.
+Built as a long-term project to learn algorithmic trading.
 Currently running in paper trading mode on Binance Testnet.
 
 ## Idea
