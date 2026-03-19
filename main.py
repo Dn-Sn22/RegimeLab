@@ -28,7 +28,6 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# Общее состояние
 current_trade_signal = {"signal": "neutral", "confidence": 0.0}
 last_anomaly_flag    = False
 last_entry_time      = 0.0
@@ -46,7 +45,6 @@ def log_trade(
     z_score: float,
     order_id: str
 ):
-    """Записывает сделку в Excel файл."""
     import openpyxl
 
     xlsx_file = Path("logs/trades.xlsx")
@@ -77,6 +75,7 @@ def log_trade(
 
     wb.save(xlsx_file)
     log.info(f"Сделка записана | {signal.upper()} @ ${price:,.2f}")
+
 
 async def research_task():
     global current_trade_signal
@@ -199,8 +198,7 @@ async def main():
     log.info("BTC Trading Bot запущен")
     log.info(f"Режим: {config.MODE} | Символ: {config.SYMBOL}")
     log.info("=" * 50)
-    
-   # Сбрасываем открытые позиции при каждом старте
+
     state = load_state()
     state.open_positions = 0
     save_state(state)

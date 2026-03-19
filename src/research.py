@@ -16,15 +16,17 @@ import config
 
 log = logging.getLogger(__name__)
 
-# Константы
 CRYPTOPANIC_URL   = "https://cryptopanic.com/api/developer/v2/posts/"
 FEAR_GREED_URL    = "https://api.alternative.me/fng/"
 COINTELEGRAPH_RSS = "https://cointelegraph.com/rss"
+COINDESK_RSS      = "https://www.coindesk.com/arc/outboundfeeds/rss/"
 FETCH_INTERVAL    = 300
 MAX_NEWS          = 5
 
-# Anthropic клиент
 client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
+cryptopanic_available  = True
+cryptopanic_reset_hour = None
 
 
 @dataclass
@@ -45,7 +47,6 @@ async def analyze_with_claude(
     content: str,
     source: str
 ) -> NewsSignal | None:
-    """Отправляет новость в Claude, получает структурированный сигнал."""
     prompt = f"""Analyze this crypto news for a BTC/USDT trading bot.
 
 Title: {title}
@@ -68,7 +69,6 @@ Return ONLY a valid JSON object, no other text, no markdown:
         )
         raw = response.content[0].text.strip()
 
-        # Убираем markdown если Claude добавил
         if raw.startswith("```"):
             raw = raw.split("```")[1]
             if raw.startswith("json"):
@@ -93,7 +93,18 @@ Return ONLY a valid JSON object, no other text, no markdown:
 
 
 async def fetch_cryptopanic(session: aiohttp.ClientSession) -> list[dict]:
-    """Получает топ новости из CryptoPanic."""
+    global cryptopanic_available, cryptopanic_reset_hour
+
+    if not cryptopanic_available:
+        current_hour = datetime.utcnow().hour
+        if cryptopanic_reset_hour is not None and current_hour == 0:
+            cryptopanic_available = True
+            cryptopanic_reset_hour = None
+            log.info("CryptoPanic: пробуем переподключиться — новый день")
+        else:
+            log.info("CryptoPanic: лимит исчерпан — пропускаем")
+            return []
+
     params = {
         "auth_token": os.getenv("CRYPTOPANIC_API_KEY"),
         "currencies": "BTC",
@@ -102,6 +113,11 @@ async def fetch_cryptopanic(session: aiohttp.ClientSession) -> list[dict]:
     }
     try:
         async with session.get(CRYPTOPANIC_URL, params=params) as resp:
+            if resp.status == 429:
+                cryptopanic_available = False
+                cryptopanic_reset_hour = datetime.utcnow().hour
+                log.warning("CryptoPanic: лимит 429 — автоотключение")
+                return []
             resp.raise_for_status()
             data = await resp.json()
             results = data.get("results", [])[:MAX_NEWS]
@@ -119,7 +135,6 @@ async def fetch_cryptopanic(session: aiohttp.ClientSession) -> list[dict]:
 
 
 async def fetch_fear_greed(session: aiohttp.ClientSession) -> dict:
-    """Получает Fear & Greed Index."""
     try:
         async with session.get(FEAR_GREED_URL) as resp:
             resp.raise_for_status()
@@ -136,25 +151,25 @@ async def fetch_fear_greed(session: aiohttp.ClientSession) -> dict:
 
 
 async def fetch_rss(session: aiohttp.ClientSession) -> list[dict]:
-    """Получает новости из CoinTelegraph RSS."""
-    try:
-        feed = feedparser.parse(COINTELEGRAPH_RSS)
-        items = feed.entries[:MAX_NEWS]
-        return [
-            {
-                "title":   entry.title,
-                "content": entry.get("summary", entry.title),
-                "source":  "cointelegraph"
-            }
-            for entry in items
-        ]
-    except Exception as e:
-        log.error(f"RSS ошибка: {e}")
-        return []
+    results = []
+    for url, source in [
+        (COINTELEGRAPH_RSS, "cointelegraph"),
+        (COINDESK_RSS, "coindesk")
+    ]:
+        try:
+            feed = feedparser.parse(url)
+            for entry in feed.entries[:MAX_NEWS]:
+                results.append({
+                    "title":   entry.title,
+                    "content": entry.get("summary", entry.title),
+                    "source":  source
+                })
+        except Exception as e:
+            log.error(f"{source} RSS ошибка: {e}")
+    return results
 
 
 def aggregate_signals(signals: list[NewsSignal], fear_greed: dict) -> dict:
-    """Агрегирует все сигналы в один торговый сигнал."""
     if not signals:
         return {"signal": "neutral", "confidence": 0.0, "fear_greed": fear_greed}
 
@@ -173,7 +188,6 @@ def aggregate_signals(signals: list[NewsSignal], fear_greed: dict) -> dict:
     else:
         signal = "neutral"
 
-    # Fear & Greed корректировка
     fg_value = fear_greed["value"]
     if fg_value < 25 and signal == "bearish":
         signal = "neutral"
@@ -191,38 +205,45 @@ def aggregate_signals(signals: list[NewsSignal], fear_greed: dict) -> dict:
 
 
 async def main_loop():
-    """Главный цикл research агента."""
     log.info("Research агент запущен")
 
     async with aiohttp.ClientSession() as session:
         while True:
-            log.info("Получаем новости...")
+            try:
+                log.info("Research: получаем новости...")
 
-            news1 = await fetch_cryptopanic(session)
-            news2 = await fetch_rss(session)
-            fg    = await fetch_fear_greed(session)
+                news1 = await fetch_cryptopanic(session)
+                news2 = await fetch_rss(session)
+                fg    = await fetch_fear_greed(session)
 
-            all_news = news1 + news2
-            log.info(f"Найдено новостей: {len(all_news)} | Fear & Greed: {fg['value']} ({fg['label']})")
-
-            signals = []
-            for item in all_news:
-                signal = await analyze_with_claude(
-                    session, item["title"], item["content"], item["source"]
+                all_news = news1 + news2
+                log.info(
+                    f"Источники: CryptoPanic={len(news1)} | "
+                    f"RSS={len(news2)} | "
+                    f"Fear&Greed: {fg['value']} ({fg['label']})"
                 )
-                if signal:
-                    signals.append(signal)
-                    log.info(
-                        f"[{signal.source}] {signal.sentiment.upper()} "
-                        f"(conf: {signal.confidence}) | {signal.title[:60]}..."
-                    )
 
-            trade_signal = aggregate_signals(signals, fg)
-            log.info(
-                f"ИТОГ: {trade_signal['signal'].upper()} | "
-                f"Уверенность: {trade_signal['confidence']} | "
-                f"Bullish: {trade_signal['bullish']} Bearish: {trade_signal['bearish']}"
-            )
+                signals = []
+                for item in all_news:
+                    signal = await analyze_with_claude(
+                        session, item["title"], item["content"], item["source"]
+                    )
+                    if signal:
+                        signals.append(signal)
+                        log.info(
+                            f"[{signal.source}] {signal.sentiment.upper()} "
+                            f"(conf: {signal.confidence}) | {signal.title[:60]}..."
+                        )
+
+                trade_signal = aggregate_signals(signals, fg)
+                log.info(
+                    f"ИТОГ: {trade_signal['signal'].upper()} | "
+                    f"Уверенность: {trade_signal['confidence']} | "
+                    f"Bullish: {trade_signal['bullish']} Bearish: {trade_signal['bearish']}"
+                )
+
+            except Exception as e:
+                log.error(f"Research ошибка: {e}")
 
             await asyncio.sleep(FETCH_INTERVAL)
 

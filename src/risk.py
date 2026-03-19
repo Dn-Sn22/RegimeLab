@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 # Параметры риска из config
 KELLY_FRACTION   = 0.25
 MAX_POSITION_PCT = 0.05
-MAX_POSITIONS    = 3
+MAX_POSITIONS    = 10
 MIN_CONFIDENCE   = 0.70
 DAILY_LOSS_LIMIT = 0.10
 MAX_DRAWDOWN     = 0.25
