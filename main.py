@@ -31,7 +31,7 @@ log = logging.getLogger(__name__)
 current_trade_signal = {"signal": "neutral", "confidence": 0.0}
 last_anomaly_flag    = False
 last_entry_time      = 0.0
-ENTRY_COOLDOWN       = 30
+ENTRY_COOLDOWN       = 1200
 
 TRADES_FILE = Path("logs/trades.xlsx")
 
