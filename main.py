@@ -1,3 +1,4 @@
+# main.py
 import asyncio
 import logging
 import json
@@ -166,7 +167,8 @@ async def scanner_task():
                         )
 
                         if decision.allowed:
-                            result = await execute_signal(signal, decision, state)
+                            # ← передаём цену из WebSocket, без лишнего REST запроса
+                            result = await execute_signal(signal, decision, state, price=price)
                             if result and result.success:
                                 log_trade(
                                     signal=signal,

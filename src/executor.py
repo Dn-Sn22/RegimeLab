@@ -53,14 +53,27 @@ def get_client() -> Client:
         log.info(f"Binance client created | Mode: {config.MODE}")
     return _client
 
+
 def get_current_price(client: Client) -> float:
-    """Gets the current BTC/USDT price."""
+    """Gets the current BTC/USDT price via REST (fallback only)."""
     try:
         ticker = client.get_symbol_ticker(symbol=config.SYMBOL)
         return float(ticker["price"])
     except Exception as e:
         log.error(f"Error getting price: {e}")
         return 0.0
+
+
+async def get_price_with_retry(client: Client, retries: int = 3, delay: float = 1.5) -> float:
+    """REST fallback with retry — used only if WebSocket price is not passed."""
+    for attempt in range(retries):
+        price = get_current_price(client)
+        if price > 0:
+            return price
+        if attempt < retries - 1:
+            log.warning(f"Price retry {attempt + 1}/{retries} — waiting {delay}s...")
+            await asyncio.sleep(delay)
+    return 0.0
 
 
 def get_step_size(client: Client) -> float:
@@ -216,7 +229,8 @@ async def place_order(
 async def execute_signal(
     signal: str,
     decision: RiskDecision,
-    state: RiskState
+    state: RiskState,
+    price: float = 0.0          # ← принимаем цену из WebSocket
 ) -> OrderResult | None:
     """Receives a signal, checks the balance, places an order."""
 
@@ -225,11 +239,17 @@ async def execute_signal(
         return None
 
     client = get_client()
-    price  = get_current_price(client)
+
+    # Используем цену из WebSocket если передана, иначе REST с retry
+    if price <= 0:
+        log.warning("WebSocket price not provided — falling back to REST with retry")
+        price = await get_price_with_retry(client)
 
     if price == 0:
         log.error("Unable to obtain price - order cancelled")
         return None
+
+    log.info(f"Price used for order: ${price:,.2f}")
 
     if not DRY_RUN:
         if not await check_balance(client, decision.position_size):
