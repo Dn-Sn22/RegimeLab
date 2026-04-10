@@ -39,27 +39,27 @@ async def notify_signal(
     fear_greed_value: int,
     fear_greed_label: str
 ):
-    """Уведомление о входе в сделку."""
+    """Trade Entry Notification."""
     direction = "BULLISH" if signal == "bullish" else "BEARISH"
 
     text = (
-        f"Господин, ваш слуга обнаружил благоприятную возможность.\n\n"
+        f"Sir, your servant has discovered a favorable opportunity..\n\n"
         
         f"📊 BTC/USDT — {direction}\n"
-        f"Цена входа: ${price:,.2f}\n"
-        f"Стоп-лосс: ${stop_loss:,.2f}\n"
+        f"Entry price: ${price:,.2f}\n"
+        f"SL: ${stop_loss:,.2f}\n"
         f"Z-score: {z_score:+.2f}\n"
-        f"Уверенность: {confidence}\n"
+        f"Confidence: {confidence}\n"
         f"Fear & Greed: {fear_greed_value} ({fear_greed_label})\n\n"
     )
     await send_message(text)
 
 
 async def notify_cryptopanic_disabled():
-    """Уведомление об отключении CryptoPanic."""
+    """CryptoPanic Disconnection Notification."""
     text = (
-        f"Господин, один из источников разведки временно недоступен.\n"
-        f"Назарик продолжает операцию с оставшимися ресурсами."
+        f"Sir, one of our intelligence sources is temporarily unavailable..\n"
+        f"Nazarick continues the operation with its remaining resources.."
     )
     await send_message(text)
 
@@ -67,10 +67,10 @@ async def notify_cryptopanic_disabled():
 async def notify_startup(mode: str, balance: float):
     """Уведомление о запуске бота."""
     text = (
-        f"🔱 Назарик пробудился и готов служить господину.\n\n"
-        f" Режим: {mode.upper()}\n"
-        f" Баланс: ${balance:.2f}\n\n"
-        f"Слежение за рынком начато. Ваш слуга бдит."
+        f"🔱 Nazarick has awakened and is ready to serve its master..\n\n"
+        f" Mode: {mode.upper()}\n"
+        f" Balance: ${balance:.2f}\n\n"
+        f"Market monitoring has begun. Your servant is vigilant.."
     )
     await send_message(text)
     
@@ -86,27 +86,27 @@ async def notify_position_closed(
 ):
    
    
-    """Уведомление о закрытии позиции."""
+    """Position Closing Notification."""
     direction = "BULLISH" if signal == "bullish" else "BEARISH"
     
     text = (
-        f"Позиция закрыта\n\n"
+        f"Position is closed\n\n"
         f" {direction}\n"
-        f"Вход: ${entry_price:,.2f}\n"
-        f"Выход: ${exit_price:,.2f}\n"
+        f"Entry: ${entry_price:,.2f}\n"
+        f"Exit: ${exit_price:,.2f}\n"
         f"PnL: {pct:+.2f}% (${pnl:+.4f})\n"
-        f" Причина: {'Тейк-профит' if 'TP' in reason else ('Стоп-лосс' if 'SL' in reason else ('Таймаут 12ч' if 'Time limit' in reason else 'Реверс сигнала'))}\n"
+        f" Reason: {'Take-Profit' if 'TP' in reason else ('Stop-Loss' if 'SL' in reason else ('Timeout 12h' if 'Time limit' in reason else 'signal Reverse'))}\n"
         f"ID: {order_id}\n\n"
-        f"Как и предусмотрено вашей мудростью, позиция закрыта."
+        f"As your wisdom has provided, the position is closed.."
     )
     await send_message(text)
 
 async def notify_shutdown(balance: float, open_positions: int, total_trades: int):
     """Notification on bot shutdown (Ctrl+C)."""
     text = (
-        f"Остановка работы бота (KeyboardInterrupt).\n\n"
-        f"Баланс: ${balance:.2f}\n"
-        f"Открытые позиции: {open_positions}\n"
-        f"Всего сделок: {total_trades}"
+        f"Stopping the bot (KeyboardInterrupt).\n\n"
+        f"Balance: ${balance:.2f}\n"
+        f"Open positions: {open_positions}\n"
+        f"Total trades: {total_trades}"
     )
     await send_message(text)

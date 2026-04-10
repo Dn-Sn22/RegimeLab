@@ -116,7 +116,7 @@ async def fetch_cryptopanic(session: aiohttp.ClientSession) -> list[dict]:
             if resp.status == 429:
                 cryptopanic_available = False
                 cryptopanic_reset_hour = datetime.utcnow().hour
-                log.warning("CryptoPanic: лимит 429 — автоотключение")
+                log.warning("CryptoPanic: Limit 429 — auto shutdown")
                 # Import here to avoid circular import
                 from src.telegram_bot import notify_cryptopanic_disabled
                 await notify_cryptopanic_disabled()
@@ -221,7 +221,7 @@ async def main_loop():
 
                 all_news = news1 + news2
                 log.info(
-                    f"Источники: CryptoPanic={len(news1)} | "
+                    f"Sources: CryptoPanic={len(news1)} | "
                     f"RSS={len(news2)} | "
                     f"Fear&Greed: {fg['value']} ({fg['label']})"
                 )
@@ -240,8 +240,8 @@ async def main_loop():
 
                 trade_signal = aggregate_signals(signals, fg)
                 log.info(
-                    f"ИТОГ: {trade_signal['signal'].upper()} | "
-                    f"Уверенность: {trade_signal['confidence']} | "
+                    f"Result: {trade_signal['signal'].upper()} | "
+                    f"Confidence: {trade_signal['confidence']} | "
                     f"Bullish: {trade_signal['bullish']} Bearish: {trade_signal['bearish']}"
                 )
 

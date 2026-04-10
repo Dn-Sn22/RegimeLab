@@ -16,7 +16,7 @@ import config
 
 log = logging.getLogger(__name__)
 
-# ── Parameters ────────────────────────────────────────────────────────────────
+# Parameters 
 
 SYMBOL         = config.SYMBOL.lower()
 INTERVAL       = "3m"
@@ -38,7 +38,7 @@ VOLUME_MULT    = 1.5     # current volume must be > VOLUME_MULT * avg volume
 PRINT_EVERY    = 1       # print status every N closed candles
 
 
-# ── State ─────────────────────────────────────────────────────────────────────
+# State 
 
 closes  = deque(maxlen=HISTORY_SIZE)
 volumes = deque(maxlen=HISTORY_SIZE)
@@ -46,7 +46,7 @@ volumes = deque(maxlen=HISTORY_SIZE)
 last_candle_time = 0
 
 
-# ── Indicators ────────────────────────────────────────────────────────────────
+# Indicators
 
 def compute_zscore(close_arr: np.ndarray) -> float:
     """
@@ -120,7 +120,7 @@ def compute_volume_signal(vol_arr: np.ndarray) -> tuple[float, bool]:
     return round(avg_vol, 4), confirmed
 
 
-# ── Signal Detection ──────────────────────────────────────────────────────────
+# Signal Detection 
 
 @dataclass
 class CandleSignal:
@@ -227,7 +227,7 @@ def print_status(sig: CandleSignal):
     )
 
 
-# ── WebSocket Processing ──────────────────────────────────────────────────────
+# WebSocket Processing 
 
 async def process_kline(data: dict) -> CandleSignal | None:
     """
@@ -286,7 +286,7 @@ async def process_kline(data: dict) -> CandleSignal | None:
     return sig
 
 
-# ── History Prefill ──────────────────────────────────────────────────────────
+# History Prefill 
 
 def prefill_history():
     """
@@ -324,7 +324,7 @@ def prefill_history():
         log.error(f"Prefill error: {e} | Will warm up from live data")
 
 
-# ── Standalone Runner ─────────────────────────────────────────────────────────
+# Standalone Runner 
 
 async def main():
     log.info(f"Scanner started | {SYMBOL.upper()} | {INTERVAL} candles | {WS_URL}")

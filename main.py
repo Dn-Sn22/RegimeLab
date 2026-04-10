@@ -43,7 +43,7 @@ last_telegram_time   = 0.0
 ENTRY_COOLDOWN       = 1200
 TELEGRAM_COOLDOWN    = 1800
 
-# Shared state для monitor_task — обновляется из scanner_task
+# Shared state для monitor_task — updated from scanner_task
 current_price_ref = {"price": 0.0}
 
 TRADES_FILE = Path("logs/trades.xlsx")
