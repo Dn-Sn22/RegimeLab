@@ -2,102 +2,147 @@
 
 # Binance Trading Bot
 
-### Autonomous AI-Powered Swing Trading System for BTC/USDT
+### Research-Driven BTC/USDT Trading System with Async Infrastructure, Risk Controls, and ML Roadmap
 
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
-[![Binance](https://img.shields.io/badge/Binance-WebSocket_API-F0B90B?style=flat-square&logo=binance&logoColor=black)](https://binance.com)
-[![Claude](https://img.shields.io/badge/Claude_API-Haiku-CC785C?style=flat-square)](https://anthropic.com)
-[![asyncio](https://img.shields.io/badge/asyncio-concurrent-4B8BBE?style=flat-square)](https://docs.python.org/3/library/asyncio.html)
-[![Status](https://img.shields.io/badge/Status-Paper_Trading-yellow?style=flat-square)]()
+[![Binance](https://img.shields.io/badge/Binance-API-F0B90B?style=flat-square&logo=binance&logoColor=black)](https://binance.com)
+[![Claude](https://img.shields.io/badge/Claude-Haiku-CC785C?style=flat-square)](https://anthropic.com)
+[![Status](https://img.shields.io/badge/Status-Research%20%26%20Paper%20Trading-yellow?style=flat-square)]()
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)]()
 
-*A research-grade algorithmic trading system combining statistical anomaly detection with real-time AI sentiment analysis — built to compete with and eventually surpass institutional-grade swing bots.*
+*A Python-based crypto trading research project focused on building robust BTC/USDT signals across changing market regimes.*
 
 </div>
 
 ---
 
-## Overview
+This project started as an autonomous BTC/USDT trading bot combining:
 
-BTB is a fully autonomous BTC/USDT swing trading bot that runs 24/7 on Binance. It fuses two independent signal streams — a **statistical price anomaly detector** (Z-score on log returns) and a **multi-source AI sentiment engine** (Claude API + live crypto news) — into a single high-confidence entry signal, with a layered risk management system protecting capital at every step.
+- real-time market scanning from Binance
+- AI-assisted news and sentiment analysis
+- layered risk management
+- paper trading execution and monitoring
 
-The project is currently in **paper trading validation phase** on Binance Testnet, accumulating a 70–100 trade dataset for statistical backtesting and parameter optimization. The target benchmark is Binance's native swing bots — with a roadmap toward a multi-strategy, multi-asset platform.
+The current focus is not hype or curve-fitting, but signal quality.
 
-> Built from scratch in Python using asyncio, WebSocket streaming, and the Anthropic Claude API. No trading frameworks — every module is custom-built for full transparency and control.
+After upgrading the scanner from raw trade ticks to closed 3-minute candles and adding RSI, EMA trend, and volume confirmation filters, I ran a walk-forward backtest to check whether the core Z-score signal had a stable edge.
+
+It did not hold up out-of-sample.
+
+That result changed the direction of the project: the next stage is an ML pipeline built around a labeled Binance market dataset and sequence models such as LSTM.
+
+---
+
+## What This Project Is
+
+This repository is currently best described as:
+
+- an algorithmic trading research project
+- a custom Python trading system built without trading frameworks
+- a transition from rule-based signals to ML-based signal discovery
+- a foundation for a future signal product layer: dashboards, signals, and subscription delivery
+
+## Current Research Findings
+
+Recent work completed:
+
+- migrated the scanner from tick data to closed 3-minute candles
+- replaced noisy micro-move detection with candle-based Z-score logic
+- added RSI, EMA trend, and volume confirmation filters
+- added instant history prefill after reconnect so the scanner does not need to re-warm for 60 minutes
+- built a walk-forward backtest on Binance candle history
+- created the first labeled dataset for the ML phase
+- confirmed that the current Z-score-centered signal does not show stable out-of-sample edge
+
+Main takeaway:
+
+The infrastructure is already solid, but the current core trading signal is not yet robust enough across different market regimes.
+
+That is why the project is now moving toward ML-based signal modeling.
 
 ---
 
 ## How It Works
 
-Two independent conditions must align simultaneously to trigger an entry:
+Two independent systems must align before the bot opens a position:
 
+```text
+[Scanner]   Closed 3-minute candle signal:
+            Z-score anomaly
+            RSI filter
+            EMA trend filter
+            volume confirmation
+
+[Research]  AI sentiment confidence > 0.70
+            Direction must match scanner signal
+
+         both conditions align
+
+[Risk]    Kelly-based position sizing
+          capital protection checks pass
+
+         entry allowed
+
+[Executor]  Paper-trading order execution
+[Monitor]   Watches TP / SL / timeout / reverse-signal exit
 ```
-[Scanner]   Z-score of log returns > 2.0  →  statistical price anomaly detected
-[Research]  AI sentiment confidence > 0.70 →  strong directional news signal
 
-         ↓ both conditions met ↓
-
-[Risk]    Kelly Criterion calculates position size
-          6-layer capital protection checks pass
-
-         ↓ cleared ↓
-
-[Executor]  Limit order placed on Binance
-[Monitor]   Watches position every 3s for TP / SL / reverse-signal exit
-```
-
-This dual-confirmation approach filters out noise from either source alone — a strong price signal with neutral news, or strong news with no price anomaly, will not trigger a trade.
+This design filters out weak entries. A raw anomaly alone is not enough: the scanner filters and the research direction both need to agree before risk management allows execution.
 
 ---
 
 ## Architecture
 
-```
+```text
 Binance_trading_bot/
-├── main.py                # Async orchestrator — runs 3 concurrent tasks
-├── config.py              # All parameters in one place
-├── requirements.txt
-├── .env.example
-├── positions.json         # Active positions state
-├── risk_state.json        # Persisted risk manager state
-│
-├── src/
-│   ├── scanner.py         # Binance WebSocket + Z-score anomaly detection
-│   ├── research.py        # News aggregation + Claude sentiment analysis
-│   ├── risk.py            # Kelly Criterion + 6-level capital protection
-│   ├── executor.py        # Binance limit orders + stop-loss (testnet)
-│   ├── position_monitor.py# Exit logic: TP / SL / reverse-signal (3s loop)
-│   └── telegram_bot.py    # Real-time Telegram notifications
-│
-└── logs/
-    ├── main.log
-    ├── scanner.log
-    ├── research.log
-    └── trades.xlsx        # Full trade history with timestamps
+|-- main.py                 # Async orchestrator - runs concurrent tasks
+|-- config.py               # All parameters in one place
+|-- requirements.txt
+|-- .env.example
+|-- backtest_wf.py          # Walk-forward validation script
+|-- lstm_dataset.py         # Dataset preparation for the ML phase
+|-- risk_state.json         # Persisted risk manager state
+|
+|-- src/
+|   |-- scanner.py          # Binance WebSocket scanner on closed 3-minute candles
+|   |-- research.py         # News aggregation + Claude sentiment analysis
+|   |-- risk.py             # Kelly criterion + capital protection
+|   |-- executor.py         # Binance paper-trading execution
+|   |-- position_monitor.py # TP / SL / timeout / reverse-signal exit logic
+|   `-- telegram_bot.py     # Real-time Telegram notifications
+|
+`-- logs/
+    |-- main.log
+    |-- scanner.log
+    |-- research.log
+    `-- trades.xlsx         # Full trade history with timestamps
 ```
 
 ### Module Details
 
 | Module | Function | Key Technology |
 |--------|----------|---------------|
-| `scanner.py` | Real-time price stream, Z-score on log returns | Binance WebSocket API |
-| `research.py` | News every 5min, AI sentiment scoring | Claude Haiku, CryptoPanic, RSS, Fear & Greed |
-| `risk.py` | Position sizing, 6 capital protections | Kelly Criterion, persistent state |
-| `executor.py` | Order placement, stop-loss management | Binance REST API (testnet) |
-| `position_monitor.py` | Exit conditions checked every 3 seconds | asyncio task |
-| `telegram_bot.py` | Trade alerts, status updates | Telegram Bot API |
+| `scanner.py` | Closed-candle signal engine with Z-score, RSI, EMA, and volume filters | Binance WebSocket API |
+| `research.py` | News every 5 minutes, AI sentiment scoring | Claude Haiku, CryptoPanic, RSS, Fear & Greed |
+| `risk.py` | Position sizing and capital protections | Kelly Criterion, persistent state |
+| `executor.py` | Paper-trading order placement | Binance REST API |
+| `position_monitor.py` | TP / SL / timeout / reverse exit checks | asyncio task |
+| `telegram_bot.py` | Trade alerts and status updates | Telegram Bot API |
 
 ---
 
 ## Signal Engine
 
-### Price Anomaly Detection (scanner.py)
-- Streams BTC/USDT tick data via WebSocket
-- Computes **Z-score of log returns** on a rolling window
-- Triggers signal when `|Z| > 2.0` — statistically significant deviation from recent price behavior
-- Passes live WebSocket price directly to executor (no redundant REST calls)
+### Scanner Engine (`scanner.py`)
 
-### AI Sentiment Engine (research.py)
+- streams closed BTC/USDT 3-minute candles from Binance
+- computes Z-score of log returns on a rolling window
+- computes RSI, EMA trend, and volume confirmation on each closed candle
+- generates a bullish or bearish scanner signal only when all filters align
+- blocks weak anomalies and logs why they were rejected
+
+### AI Sentiment Engine (`research.py`)
+
 Aggregates from 4 independent sources every 5 minutes:
 
 | Source | Type | Rate Limit Handling |
@@ -105,15 +150,15 @@ Aggregates from 4 independent sources every 5 minutes:
 | CryptoPanic API | News aggregator + community votes | Auto-disable at 600/month limit |
 | CoinTelegraph RSS | Crypto media | Unlimited |
 | CoinDesk RSS | Crypto media | Unlimited |
-| Fear & Greed Index | Market sentiment (0–100) | Unlimited |
+| Fear & Greed Index | Market sentiment (0-100) | Unlimited |
 
-All sources are fed to **Claude Haiku** for unified sentiment classification: `bullish / bearish / neutral` with a confidence score. Only signals with `confidence ≥ 0.70` are passed forward.
+All sources are fed to **Claude Haiku** for unified sentiment classification: `bullish / bearish / neutral` with a confidence score. Only signals with `confidence >= 0.70` are passed forward.
 
 ---
 
 ## Risk Management
 
-6-layer capital protection system, state persisted to `risk_state.json`:
+Layered capital protection system, state persisted to `risk_state.json`:
 
 | Parameter | Value | Description |
 |-----------|-------|-------------|
@@ -127,24 +172,25 @@ All sources are fed to **Claude Haiku** for unified sentiment classification: `b
 | Min confidence | 0.70 | Signal quality filter |
 | Kelly fraction | 0.25 | Conservative fractional Kelly |
 
-**Exit logic** (position_monitor.py) checks every 3 seconds:
-1. Take-profit hit → close
-2. Stop-loss hit → close
-3. Reverse signal from research → close early
+**Exit logic** (`position_monitor.py`) checks every 3 seconds:
+1. Take-profit hit -> close
+2. Stop-loss hit -> close
+3. Reverse signal from research -> close early
+4. Timeout reached -> close
 
 ---
 
 ## Tech Stack
 
-```
+```text
 Core          Python 3.11, asyncio, Anaconda (botenv)
 Exchange      Binance WebSocket API, Binance REST API (testnet)
-AI / NLP      Anthropic Claude API (Haiku) — sentiment analysis
+AI / NLP      Anthropic Claude API (Haiku) for sentiment analysis
 Data          CryptoPanic API, CoinTelegraph RSS, CoinDesk RSS
               Alternative.me Fear & Greed Index
-Strategy      Z-score of log returns, Kelly Criterion
+Research      Walk-forward backtesting, labeled ML dataset generation
 Alerts        Telegram Bot API
-Logging       Excel trade log (openpyxl), rotating file logs
+Logging       Excel trade log (openpyxl), file logs
 Environment   Anaconda, python-dotenv
 ```
 
@@ -167,7 +213,8 @@ cp .env.example .env
 # Fill in your API keys: Binance Testnet, Anthropic, CryptoPanic, Telegram
 ```
 
-**Required API keys** (all free tiers sufficient for paper trading):
+**Required API keys**:
+
 - Binance Testnet API key + secret
 - Anthropic API key
 - CryptoPanic API token
@@ -188,52 +235,74 @@ del risk_state.json   # Windows
 python main.py
 ```
 
-The bot will start 3 concurrent async tasks: price scanning, news research, and position monitoring. All activity is logged and Telegram notifications are sent on trades and alerts.
+The bot starts concurrent tasks for scanner, research, and position monitoring. Activity is logged locally and Telegram notifications are sent for important events.
 
 ---
 
-## Current Status & Validation
+## Research Status
 
-| Phase | Status |
-|-------|--------|
-| Core architecture | ✅ Complete |
-| Scanner (Z-score) | ✅ Complete |
-| Research (AI sentiment) | ✅ Complete |
-| Risk management (6-layer) | ✅ Complete |
-| Executor (testnet orders) | ✅ Complete |
-| Exit logic (TP/SL/reverse) | ✅ Complete |
-| Telegram notifications | ✅ Complete |
-| Paper trading validation | 🔄 In progress (~40/100 trades) |
-| Backtesting & optimization |  Next |
-| Telegram upgrade (summaries) |  Planned |
-| TUI dashboard (Textual) |  Planned |
+- paper-trading infrastructure: working
+- scanner redesign to 3-minute candles: completed
+- walk-forward validation: completed
+- current Z-score core signal: not stable out-of-sample
+- ML dataset preparation: completed
+- baseline ML models: next
+- first LSTM model: next
 
 ---
 
 ## Roadmap
 
-### Near-Term
-- [ ] **Backtesting framework** — Vectorbt-based parameter sweep across Z-score thresholds, TP/SL ratios, and sentiment weights. Walk-forward validation on 2021–2024 data
-- [ ] **Parameter optimization** — Grid search across key variables, Sharpe Ratio and Calmar Ratio as primary optimization targets
-- [ ] **Telegram upgrade** — End-of-session summaries, P&L reports, TP selector (3–20% + dynamic), balance-aware sizing
-- [ ] **TUI dashboard** — Real-time terminal interface via Textual: live prices, open positions, session stats
+### Now
 
-### Long-Term Vision
+- [x] Async trading bot architecture
+- [x] Binance scanner on 3-minute candles
+- [x] RSI / EMA / volume filters
+- [x] reconnect history prefill
+- [x] walk-forward backtest
+- [x] proof that current core signal lacks stable edge
+- [x] prepare ML dataset from Binance candles
+- [ ] benchmark baseline models
+- [ ] train first LSTM model
+- [ ] integrate ML inference into paper trading
 
-BTB is the foundation of a larger platform:
+### Next
 
-- [ ] **Multi-strategy engine** — Modular strategy switching: swing, scalping, mean-reversion, momentum
-- [ ] **Multi-asset expansion** — ETH, SOL, and top-cap altcoins alongside BTC
-- [ ] **Multi-agent architecture** — Specialized AI agents per signal type (price, sentiment, on-chain), coordinated by a meta-agent
-- [ ] **Web frontend** — Real-time dashboard: portfolio overview, trade history, live signals, performance analytics
-- [ ] **On-chain data integration** — Whale wallet tracking, exchange inflows/outflows, funding rates
-- [ ] **Live trading deployment** — Full transition from testnet after backtesting validation and 100-trade paper dataset confirmed profitable
+- [ ] market regime detection
+- [ ] better execution realism: fees, slippage, latency
+- [ ] richer Telegram control layer
+- [ ] TUI / dashboard
+- [ ] web frontend for signal delivery
+
+### Later
+
+- [ ] multi-asset support
+- [ ] multiple strategies
+- [ ] product layer and subscription delivery
+- [ ] public ML model / dataset release
+
+---
+
+## Why Follow This Project
+
+Many public trading bot repositories stop at one of these stages:
+
+- a basic strategy
+- a polished README
+- an unrealistic backtest
+
+This project is trying to go further:
+
+- build real async infrastructure
+- validate ideas honestly with walk-forward testing
+- reject weak signals instead of hiding them
+- move toward ML only after rule-based logic fails validation
 
 ---
 
 ## Performance Targets
 
-The primary benchmark is Binance's native swing trading bots. Key metrics tracked:
+The primary benchmark is a stable, risk-aware signal engine rather than a one-off backtest result.
 
 | Metric | Target |
 |--------|--------|
@@ -247,19 +316,19 @@ The primary benchmark is Binance's native swing trading bots. Key metrics tracke
 
 ## Security
 
-- `DRY_RUN = True` — no real orders placed until manually enabled
-- `TRADING_MODE = testnet` — all execution on Binance Testnet
-- API keys stored in `.env`, never committed (`.gitignore`)
-- `.env.example` provided with placeholder values only
+- `TRADING_MODE = testnet` - execution stays on Binance Testnet
+- API keys are stored in `.env` and never committed
+- `.env.example` is provided with placeholder values only
 
 ---
 
 ## Contributing
 
 The project is moving toward open collaboration. If you're interested in:
-- Quantitative strategy development
-- ML/AI signal enhancement
-- Frontend or infrastructure
+
+- quantitative strategy development
+- ML signal enhancement
+- frontend or infrastructure
 
 Feel free to open an issue or reach out directly.
 
@@ -267,13 +336,13 @@ Feel free to open an issue or reach out directly.
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
 <div align="center">
 
-*Built with Python, asyncio, and a long-term vision.*
-*Currently in research phase — not financial advice.*
+*Built with Python, asyncio, and a long-term research mindset.*  
+*Currently in research phase - not financial advice.*
 
 </div>
