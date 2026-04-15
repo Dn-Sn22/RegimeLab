@@ -283,23 +283,6 @@ The bot starts concurrent tasks for scanner, research, and position monitoring. 
 
 ---
 
-## Why Follow This Project
-
-Many public trading bot repositories stop at one of these stages:
-
-- a basic strategy
-- a polished README
-- an unrealistic backtest
-
-This project is trying to go further:
-
-- build real async infrastructure
-- validate ideas honestly with walk-forward testing
-- reject weak signals instead of hiding them
-- move toward ML only after rule-based logic fails validation
-
----
-
 ## Performance Targets
 
 The primary benchmark is a stable, risk-aware signal engine rather than a one-off backtest result.
