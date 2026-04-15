@@ -300,7 +300,7 @@ if __name__ == "__main__":
     state    = load_state()
     decision = RiskDecision(
         allowed=True,
-        reason="Тест",
+        reason="Test",
         position_size=5.0,
         stop_loss=68000.0,
         kelly_pct=5.0

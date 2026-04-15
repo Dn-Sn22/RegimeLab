@@ -18,8 +18,8 @@ from src.research import aggregate_signals
 from src.research import fetch_cryptopanic, fetch_fear_greed, fetch_rss, analyze_with_claude
 from src.risk import load_state, save_state, check_risk
 from src.executor import execute_signal
-from src.position_monitor import monitor_positions
-from src.telegram_bot import notify_signal, notify_startup, notify_cryptopanic_disabled, notify_position_closed
+from src.position_monitor import monitor_positions, load_positions
+from src.telegram_bot import notify_signal, notify_startup, notify_cryptopanic_disabled, notify_position_closed, notify_shutdown
 
 Path("logs").mkdir(exist_ok=True)
 
@@ -43,7 +43,7 @@ last_telegram_time   = 0.0
 ENTRY_COOLDOWN       = 1200
 TELEGRAM_COOLDOWN    = 1800
 
-# Shared state for monitor_task — updated from scanner_task
+# Shared state for monitor_task - updated from scanner_task
 current_price_ref = {"price": 0.0}
 
 TRADES_FILE = Path("logs/trades.xlsx")
@@ -343,4 +343,16 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        log.info("KeyboardInterrupt received - shutting down")
+        state = load_state()
+        open_positions = len(load_positions())
+        asyncio.run(
+            notify_shutdown(
+                balance=state.balance,
+                open_positions=open_positions,
+                total_trades=state.total_trades,
+            )
+        )

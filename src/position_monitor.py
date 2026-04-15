@@ -119,7 +119,7 @@ def should_close(
     if position.price_entry <= 0:
         return False, "Invalid entry price"
 
-    # Time-based exit — close after 12 hours regardless of PnL
+    # Time-based exit - close after 12 hours regardless of PnL
     try:
         opened_at  = datetime.fromisoformat(position.opened_at).replace(tzinfo=timezone.utc)
         now        = datetime.now(timezone.utc)
@@ -143,7 +143,7 @@ def should_close(
     if position.signal == "bearish" and current_price >= position.stop_loss:
         return True, f"SL hit | -${abs(pnl):.4f}"
 
-    # Reverse signal — only close if in profit
+    # Reverse signal - only close if in profit
     reverse = (
         (position.signal == "bullish" and current_signal == "bearish") or
         (position.signal == "bearish" and current_signal == "bullish")

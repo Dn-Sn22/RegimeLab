@@ -1,4 +1,4 @@
-# Secrets — never commit
+# Secrets - never commit
 .env
 .env.local
 .env.*.local
@@ -22,3 +22,7 @@ desktop.ini
 # Runtime state
 risk_state.json
 positions.json
+
+backtest_wf.py
+lstm_dataset.py
+data/

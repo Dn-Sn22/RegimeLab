@@ -246,7 +246,7 @@ async def main_loop():
                 )
 
             except Exception as e:
-                log.error(f"Research ошибка: {e}")
+                log.error(f"Research error: {e}")
 
             await asyncio.sleep(FETCH_INTERVAL)
 
