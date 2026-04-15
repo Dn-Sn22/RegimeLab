@@ -2,10 +2,6 @@
 
 # RegimeLab
 
-![Research](https://img.shields.io/badge/Research-Driven-0A7E8C?style=flat-square)
-![Validation](https://img.shields.io/badge/Validation-Walk--Forward%20Tested-1F6FEB?style=flat-square)
-
-
 ### Research-Driven BTC/USDT Trading System with Async Infrastructure, Risk Controls, and ML Roadmap
 
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
