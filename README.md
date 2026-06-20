@@ -1,10 +1,8 @@
 <div align="center">
 
-
 # RegimeLab
 
-
-### Research-Driven BTC/USDT Trading System with Async Infrastructure, Risk Controls, and ML Roadmap
+### Исследовательская торговая система BTC/USDT с асинхронной инфраструктурой, риск-менеджментом и ML-планом развития
 
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![Binance](https://img.shields.io/badge/Binance-API-F0B90B?style=flat-square&logo=binance&logoColor=black)](https://binance.com)
@@ -12,194 +10,193 @@
 [![Status](https://img.shields.io/badge/Status-Research%20%26%20Paper%20Trading-yellow?style=flat-square)]()
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)]()
 
-*A Python-based crypto trading research project focused on building robust BTC/USDT signals across changing market regimes.*
+*Проект на Python — исследование робастных торговых сигналов BTC/USDT в условиях меняющихся рыночных режимов.*
 
 </div>
 
 ---
 
-This project started as an autonomous BTC/USDT trading bot combining:
+Проект начинался как автономный торговый бот BTC/USDT, объединяющий:
 
-- real-time market scanning from Binance
-- AI-assisted news and sentiment analysis
-- layered risk management
-- paper trading execution and monitoring
+- сканирование рынка Binance в реальном времени
+- AI-анализ новостей и настроений
+- многоуровневый риск-менеджмент
+- исполнение и мониторинг в режиме paper trading
 
+После перехода сканера с сырых тиков на закрытые 3-минутные свечи и добавления фильтров RSI, EMA-тренда и подтверждения по объёму, был проведён walk-forward backtest — проверка устойчивости основного Z-score сигнала.
 
-After upgrading the scanner from raw trade ticks to closed 3-minute candles and adding RSI, EMA trend, and volume confirmation filters, I ran a walk-forward backtest to check whether the core Z-score signal had a stable edge.
+Сигнал не показал стабильного преимущества на out-of-sample данных.
 
-It did not hold up out-of-sample.
-
-That result changed the direction of the project: the next stage is an ML pipeline built around a labeled Binance market dataset and sequence models such as LSTM.
-
----
-
-## What This Project Is
-
-This repository is currently best described as:
-
-- an algorithmic trading research project
-- a custom Python trading system built without trading frameworks
-- a transition from rule-based signals to ML-based signal discovery
-- a foundation for a future signal product layer: dashboards, signals, and subscription delivery
-
-## Current Research Findings
-
-Recent work completed:
-
-- migrated the scanner from tick data to closed 3-minute candles
-- replaced noisy micro-move detection with candle-based Z-score logic
-- added RSI, EMA trend, and volume confirmation filters
-- added instant history prefill after reconnect so the scanner does not need to re-warm for 60 minutes
-- built a walk-forward backtest on Binance candle history
-- created the first labeled dataset for the ML phase
-- confirmed that the current Z-score-centered signal does not show stable out-of-sample edge
-
-Main takeaway:
-
-The infrastructure is already solid, but the current core trading signal is not yet robust enough across different market regimes.
-
-That is why the project is now moving toward ML-based signal modeling.
+Этот результат изменил направление проекта: следующий этап — ML-пайплайн на основе размеченного датасета Binance и моделей последовательностей, таких как LSTM.
 
 ---
 
-## How It Works
+## Что это за проект
 
-Two independent systems must align before the bot opens a position:
+Текущее состояние репозитория лучше всего описать так:
+
+- исследовательский проект алгоритмической торговли
+- кастомная торговая система на Python без использования готовых trading-фреймворков
+- переход от rule-based сигналов к поиску сигналов через ML
+- основа для будущего продуктового слоя: дашборды, сигналы, подписочная доставка
+
+## Текущие результаты исследования
+
+Выполнено за последний период:
+
+- сканер переведён с тиковых данных на закрытые 3-минутные свечи
+- шумное определение микро-движений заменено на Z-score логику на основе свечей
+- добавлены фильтры RSI, EMA-тренда и подтверждения по объёму
+- добавлен мгновенный прогрев истории после переподключения — сканеру больше не нужно "разогреваться" 60 минут заново
+- построен walk-forward backtest на исторических свечах Binance
+- создан первый размеченный датасет для ML-этапа
+- подтверждено, что текущий Z-score сигнал не показывает стабильного преимущества на out-of-sample данных
+
+Главный вывод:
+
+Инфраструктура уже устойчива, но текущий основной торговый сигнал пока недостаточно робастен в разных рыночных режимах.
+
+Поэтому проект движется в сторону ML-моделирования сигналов.
+
+---
+
+## Как это работает
+
+Перед открытием позиции должны совпасть два независимых сигнала:
 
 ```text
-[Scanner]   Closed 3-minute candle signal:
-            Z-score anomaly
-            RSI filter
-            EMA trend filter
-            volume confirmation
+[Scanner]   Сигнал по закрытой 3-минутной свече:
+            Z-score аномалия
+            фильтр RSI
+            фильтр EMA-тренда
+            подтверждение по объёму
 
-[Research]  AI sentiment confidence > 0.70
-            Direction must match scanner signal
+[Research]  Уверенность AI-сентимента > 0.70
+            Направление совпадает с сигналом сканера
 
-         both conditions align
+         оба условия совпадают
 
-[Risk]    Kelly-based position sizing
-          capital protection checks pass
+[Risk]    Размер позиции по Kelly Criterion
+          проверки защиты капитала пройдены
 
-         entry allowed
+         вход разрешён
 
-[Executor]  Paper-trading order execution
-[Monitor]   Watches TP / SL / timeout / reverse-signal exit
+[Executor]  Исполнение ордера в paper-trading
+[Monitor]   Отслеживание TP / SL / таймаута / обратного сигнала
 ```
 
-This design filters out weak entries. A raw anomaly alone is not enough: the scanner filters and the research direction both need to agree before risk management allows execution.
+Такая схема отсеивает слабые входы. Одной аномалии недостаточно — фильтры сканера и направление от research-модуля должны совпасть, прежде чем риск-менеджмент разрешит исполнение.
 
 ---
 
-## Architecture
+## Архитектура
 
 ```text
 Binance_trading_bot/
-|-- main.py                 # Async orchestrator - runs concurrent tasks
-|-- config.py               # All parameters in one place
+|-- main.py                 # Асинхронный оркестратор - запускает параллельные задачи
+|-- config.py               # Все параметры в одном месте
 |-- requirements.txt
 |-- .env.example
-|-- backtest_wf.py          # Walk-forward validation script
-|-- lstm_dataset.py         # Dataset preparation for the ML phase
-|-- risk_state.json         # Persisted risk manager state
+|-- backtest_wf.py          # Скрипт walk-forward валидации
+|-- lstm_dataset.py         # Подготовка датасета для ML-этапа
+|-- risk_state.json         # Сохранённое состояние риск-менеджера
 |
 |-- src/
-|   |-- scanner.py          # Binance WebSocket scanner on closed 3-minute candles
-|   |-- research.py         # News aggregation + Claude sentiment analysis
-|   |-- risk.py             # Kelly criterion + capital protection
-|   |-- executor.py         # Binance paper-trading execution
-|   |-- position_monitor.py # TP / SL / timeout / reverse-signal exit logic
-|   `-- telegram_bot.py     # Real-time Telegram notifications
+|   |-- scanner.py          # Сканер Binance WebSocket на закрытых 3-минутных свечах
+|   |-- research.py         # Агрегация новостей + анализ сентимента через Claude
+|   |-- risk.py             # Kelly Criterion + защита капитала
+|   |-- executor.py         # Исполнение ордеров в paper-trading режиме Binance
+|   |-- position_monitor.py # Логика выхода TP / SL / таймаут / обратный сигнал
+|   `-- telegram_bot.py     # Уведомления в Telegram в реальном времени
 |
 `-- logs/
     |-- main.log
     |-- scanner.log
     |-- research.log
-    `-- trades.xlsx         # Full trade history with timestamps
+    `-- trades.xlsx         # Полная история сделок с таймстампами
 ```
 
-### Module Details
+### Описание модулей
 
-| Module | Function | Key Technology |
-|--------|----------|---------------|
-| `scanner.py` | Closed-candle signal engine with Z-score, RSI, EMA, and volume filters | Binance WebSocket API |
-| `research.py` | News every 5 minutes, AI sentiment scoring | Claude Haiku, CryptoPanic, RSS, Fear & Greed |
-| `risk.py` | Position sizing and capital protections | Kelly Criterion, persistent state |
-| `executor.py` | Paper-trading order placement | Binance REST API |
-| `position_monitor.py` | TP / SL / timeout / reverse exit checks | asyncio task |
-| `telegram_bot.py` | Trade alerts and status updates | Telegram Bot API |
+| Модуль | Функция | Ключевая технология |
+|--------|---------|---------------------|
+| `scanner.py` | Сигнальный движок на закрытых свечах с Z-score, RSI, EMA и фильтром объёма | Binance WebSocket API |
+| `research.py` | Новости каждые 5 минут, AI-оценка сентимента | Claude Haiku, CryptoPanic, RSS, Fear & Greed |
+| `risk.py` | Сайзинг позиций и защита капитала | Kelly Criterion, персистентное состояние |
+| `executor.py` | Размещение ордеров в paper-trading | Binance REST API |
+| `position_monitor.py` | Проверки выхода TP / SL / таймаут / реверс | asyncio task |
+| `telegram_bot.py` | Алерты по сделкам и статус | Telegram Bot API |
 
 ---
 
-## Signal Engine
+## Сигнальный движок
 
 ### Scanner Engine (`scanner.py`)
 
-- streams closed BTC/USDT 3-minute candles from Binance
-- computes Z-score of log returns on a rolling window
-- computes RSI, EMA trend, and volume confirmation on each closed candle
-- generates a bullish or bearish scanner signal only when all filters align
-- blocks weak anomalies and logs why they were rejected
+- стримит закрытые 3-минутные свечи BTC/USDT с Binance
+- считает Z-score логарифмических доходностей на скользящем окне
+- считает RSI, EMA-тренд и подтверждение объёма на каждой закрытой свече
+- генерирует бычий или медвежий сигнал только когда все фильтры совпадают
+- блокирует слабые аномалии и логирует причину отказа
 
 ### AI Sentiment Engine (`research.py`)
 
-Aggregates from 4 independent sources every 5 minutes:
+Агрегация из 4 независимых источников каждые 5 минут:
 
-| Source | Type | Rate Limit Handling |
-|--------|------|---------------------|
-| CryptoPanic API | News aggregator + community votes | Auto-disable at 600/month limit |
-| CoinTelegraph RSS | Crypto media | Unlimited |
-| CoinDesk RSS | Crypto media | Unlimited |
-| Fear & Greed Index | Market sentiment (0-100) | Unlimited |
+| Источник | Тип | Обработка лимитов |
+|----------|-----|---------------------|
+| CryptoPanic API | Агрегатор новостей + голоса сообщества | Авто-отключение при лимите 600/мес |
+| CoinTelegraph RSS | Крипто-медиа | Без лимита |
+| CoinDesk RSS | Крипто-медиа | Без лимита |
+| Fear & Greed Index | Индекс настроения рынка (0-100) | Без лимита |
 
-All sources are fed to **Claude Haiku** for unified sentiment classification: `bullish / bearish / neutral` with a confidence score. Only signals with `confidence >= 0.70` are passed forward.
-
----
-
-## Risk Management
-
-Layered capital protection system, state persisted to `risk_state.json`:
-
-| Parameter | Value | Description |
-|-----------|-------|-------------|
-| Position size | max 5% per trade | Kelly Criterion-adjusted |
-| Stop-loss | 8% | Hard floor per position |
-| Take-profit | 5% | Fixed exit target |
-| Max open positions | 10 (paper) / 3 (live) | Concentration limit |
-| Daily loss limit | 10% | Shuts off trading for the day |
-| Max drawdown | 25% | Full system halt |
-| Entry cooldown | 20 min | Prevents overtrading |
-| Min confidence | 0.70 | Signal quality filter |
-| Kelly fraction | 0.25 | Conservative fractional Kelly |
-
-**Exit logic** (`position_monitor.py`) checks every 3 seconds:
-1. Take-profit hit -> close
-2. Stop-loss hit -> close
-3. Reverse signal from research -> close early
-4. Timeout reached -> close
+Все источники передаются в **Claude Haiku** для единой классификации сентимента: `bullish / bearish / neutral` с оценкой уверенности. Дальше пропускаются только сигналы с `confidence >= 0.70`.
 
 ---
 
-## Tech Stack
+## Риск-менеджмент
+
+Многоуровневая система защиты капитала, состояние сохраняется в `risk_state.json`:
+
+| Параметр | Значение | Описание |
+|----------|----------|----------|
+| Размер позиции | макс. 5% на сделку | Скорректировано по Kelly Criterion |
+| Stop-loss | 8% | Жёсткий предел по позиции |
+| Take-profit | 5% | Фиксированная цель выхода |
+| Макс. открытых позиций | 10 (paper) / 3 (live) | Лимит концентрации |
+| Дневной лимит убытка | 10% | Останавливает торговлю на день |
+| Макс. просадка | 25% | Полная остановка системы |
+| Кулдаун входа | 20 мин | Защита от overtrading |
+| Мин. уверенность | 0.70 | Фильтр качества сигнала |
+| Kelly fraction | 0.25 | Консервативная доля Kelly |
+
+**Логика выхода** (`position_monitor.py`) проверяется каждые 3 секунды:
+1. Достигнут take-profit -> закрытие
+2. Достигнут stop-loss -> закрытие
+3. Обратный сигнал от research -> досрочное закрытие
+4. Истёк таймаут -> закрытие
+
+---
+
+## Технологический стек
 
 ```text
 Core          Python 3.11, asyncio, Anaconda (botenv)
 Exchange      Binance WebSocket API, Binance REST API (testnet)
-AI / NLP      Anthropic Claude API (Haiku) for sentiment analysis
+AI / NLP      Anthropic Claude API (Haiku) для анализа сентимента
 Data          CryptoPanic API, CoinTelegraph RSS, CoinDesk RSS
               Alternative.me Fear & Greed Index
-Research      Walk-forward backtesting, labeled ML dataset generation
+Research      Walk-forward backtesting, генерация размеченного ML-датасета
 Alerts        Telegram Bot API
-Logging       Excel trade log (openpyxl), file logs
+Logging       Excel trade log (openpyxl), файловые логи
 Environment   Anaconda, python-dotenv
 ```
 
 ---
 
-## Installation
+## Установка
 
-Requires [Anaconda](https://www.anaconda.com/download).
+Требуется [Anaconda](https://www.anaconda.com/download).
 
 ```bash
 git clone https://github.com/Dn-Sn22/Binance_trading_bot.git
@@ -211,10 +208,10 @@ conda install pandas numpy -y
 pip install -r requirements.txt
 
 cp .env.example .env
-# Fill in your API keys: Binance Testnet, Anthropic, CryptoPanic, Telegram
+# Заполните свои API-ключи: Binance Testnet, Anthropic, CryptoPanic, Telegram
 ```
 
-**Required API keys**:
+**Необходимые API-ключи**:
 
 - Binance Testnet API key + secret
 - Anthropic API key
@@ -223,110 +220,99 @@ cp .env.example .env
 
 ---
 
-## Usage
+## Использование
 
 ```bash
 conda activate botenv
 cd Binance_trading_bot
 
-# Remove stale state before each session
+# Удалить устаревшее состояние перед каждой сессией
 del risk_state.json   # Windows
 # rm risk_state.json  # Linux/Mac
 
 python main.py
 ```
 
-The bot starts concurrent tasks for scanner, research, and position monitoring. Activity is logged locally and Telegram notifications are sent for important events.
+Бот запускает параллельные задачи для сканера, research-модуля и мониторинга позиций. Активность логируется локально, важные события отправляются в Telegram.
 
 ---
 
-## Research Status
+## Статус исследования
 
-- paper-trading infrastructure: working
-- scanner redesign to 3-minute candles: completed
-- walk-forward validation: completed
-- current Z-score core signal: not stable out-of-sample
-- ML dataset preparation: completed
-- baseline ML models: next
-- first LSTM model: next
+- инфраструктура paper-trading: работает
+- переход сканера на 3-минутные свечи: завершён
+- walk-forward валидация: завершена
+- текущий Z-score сигнал: нестабилен на out-of-sample
+- подготовка ML-датасета: завершена
+- baseline ML-модели: в планах
+- первая модель LSTM: в планах
 
 ---
 
 ## Roadmap
 
-### Now
+### Сейчас
 
-- [x] Async trading bot architecture
-- [x] Binance scanner on 3-minute candles
-- [x] RSI / EMA / volume filters
-- [x] reconnect history prefill
-- [x] walk-forward backtest
-- [x] proof that current core signal lacks stable edge
-- [x] prepare ML dataset from Binance candles
-- [ ] benchmark baseline models
-- [ ] train first LSTM model
-- [ ] integrate ML inference into paper trading
+- [x] Асинхронная архитектура торгового бота
+- [x] Сканер Binance на 3-минутных свечах
+- [x] Фильтры RSI / EMA / объём
+- [x] Прогрев истории после переподключения
+- [x] Walk-forward backtest
+- [x] Доказано отсутствие стабильного преимущества текущего сигнала
+- [x] Подготовка ML-датасета из свечей Binance
+- [ ] Бенчмарк baseline-моделей
+- [ ] Обучение первой модели LSTM
+- [ ] Интеграция ML-инференса в paper trading
 
-### Next
+### Далее
 
-- [ ] market regime detection
-- [ ] better execution realism: fees, slippage, latency
-- [ ] richer Telegram control layer
-- [ ] TUI / dashboard
-- [ ] web frontend for signal delivery
+- [ ] Определение рыночного режима
+- [ ] Более реалистичное исполнение: комиссии, slippage, задержки
+- [ ] Расширенное управление через Telegram
+- [ ] TUI / дашборд
+- [ ] Веб-фронтенд для доставки сигналов
 
-### Later
+### Позже
 
-- [ ] multi-asset support
-- [ ] multiple strategies
-- [ ] product layer and subscription delivery
-- [ ] public ML model / dataset release
+- [ ] Поддержка нескольких активов
+- [ ] Несколько стратегий
+- [ ] Продуктовый слой и подписочная доставка
+- [ ] Публичный релиз ML-модели / датасета
 
 ---
 
-## Performance Targets
+## Целевые показатели
 
-The primary benchmark is a stable, risk-aware signal engine rather than a one-off backtest result.
+Основной критерий — стабильный, риск-осознанный сигнальный движок, а не разовый результат бэктеста.
 
-| Metric | Target |
-|--------|--------|
+| Метрика | Цель |
+|---------|------|
 | Win rate | > 55% |
 | Sharpe Ratio | > 1.5 |
 | Max Drawdown | < 15% |
-| Monthly return | > 8% |
-| Avg R:R ratio | > 1 : 1.5 |
+| Месячная доходность | > 8% |
+| Среднее R:R | > 1 : 1.5 |
 
 ---
 
-## Security
+## Безопасность
 
-- `TRADING_MODE = testnet` - execution stays on Binance Testnet
-- API keys are stored in `.env` and never committed
-- `.env.example` is provided with placeholder values only
-
----
-
-## Contributing
-
-The project is moving toward open collaboration. If you're interested in:
-
-- quantitative strategy development
-- ML signal enhancement
-- frontend or infrastructure
-
-Feel free to open an issue or reach out directly.
+- `TRADING_MODE = testnet` — исполнение остаётся на Binance Testnet
+- API-ключи хранятся в `.env` и никогда не коммитятся
+- `.env.example` содержит только placeholder-значения
 
 ---
 
-## License
+## Лицензия
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License — подробности в [LICENSE](LICENSE).
 
 ---
 
 <div align="center">
 
-*Built with Python, asyncio, and a long-term research mindset.*  
-*Currently in research phase - not financial advice.*
+*Создано на Python, asyncio и с долгосрочным исследовательским подходом.*
+*Сейчас в исследовательской фазе — не является финансовой рекомендацией.*
 
 </div>
+
